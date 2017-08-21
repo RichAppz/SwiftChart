@@ -1,7 +1,7 @@
 
 Pod::Spec.new do |s|
   s.name             = "RASwiftChart"
-  s.version          = "0.5.0"
+  s.version          = "0.5.1"
   s.summary          = "Line and area chart library"
   s.description      = "Support multiple and partially filled series, signed floats, touch events."
   s.homepage         = "https://github.com/RichAppz/SwiftChart.git"
