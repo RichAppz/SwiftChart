@@ -1,10 +1,10 @@
 
 Pod::Spec.new do |s|
-  s.name             = "SwiftChart"
+  s.name             = "RASwiftChart"
   s.version          = "0.5.0"
   s.summary          = "Line and area chart library"
   s.description      = "Support multiple and partially filled series, signed floats, touch events."
-  s.homepage         = "https://github.com/gpbl/SwiftChart"
+  s.homepage         = "https://github.com/RichAppz/SwiftChart.git"
   s.license          = 'MIT'
   s.author           = { "Giampaolo Bellavite" => "io@gpbl.org" }
   s.source           = { :git => "https://github.com/gpbl/SwiftChart.git", :tag => s.version.to_s }

@@ -46,6 +46,7 @@ Represent the x- and the y-axis values for each point in a chart series.
 typealias ChartPoint = (x: Float, y: Float)
 
 public enum ChartLabelOrientation {
+    case stagger
     case horizontal
     case vertical
 }
@@ -116,7 +117,8 @@ open class Chart: UIControl {
     /**
     Font used for the labels.
     */
-    open var labelFont: UIFont? = UIFont.systemFont(ofSize: 12)
+    open var xLabelFont: UIFont? = UIFont.systemFont(ofSize: 12)
+    open var yLabelFont: UIFont? = UIFont.systemFont(ofSize: 12)
 
     /**
     Font used for the labels.
@@ -549,6 +551,7 @@ open class Chart: UIControl {
 
     }
 
+    var missLabel = true
     fileprivate func drawLabelsAndGridOnXAxis() {
 
         let context = UIGraphicsGetCurrentContext()!
@@ -578,14 +581,15 @@ open class Chart: UIControl {
                 context.strokePath()
             }
 
-            if xLabelsSkipLast && isLastLabel {
+            missLabel = !missLabel
+            if (xLabelsSkipLast && isLastLabel) || (missLabel && xLabelsOrientation == .stagger) {
                 // Do not add label at the most right position
                 return
             }
 
             // Add label
             let label = UILabel(frame: CGRect(x: x, y: drawingHeight, width: 0, height: 0))
-            label.font = labelFont
+            label.font = xLabelFont
             label.text = xLabelsFormatter(i, labels[i])
             label.textColor = labelColor
 
@@ -593,20 +597,25 @@ open class Chart: UIControl {
             label.sizeToFit()
             // Center label vertically
             label.frame.origin.y += topInset
-            if xLabelsOrientation == .horizontal {
+            switch xLabelsOrientation {
+            case .horizontal:
                 // Add left padding
                 label.frame.origin.y -= (label.frame.height - bottomInset) / 2
                 label.frame.origin.x += padding
-
+                
                 // Set label's text alignment
                 label.frame.size.width = (drawingWidth / CGFloat(labels.count)) - padding * 2
                 label.textAlignment = xLabelsTextAlignment
-            } else {
+            case .stagger:
+                label.frame.origin.y -= (label.frame.height - bottomInset) / 2
+                label.frame.origin.x += 1
+                label.textAlignment = .center
+            default:
                 label.transform = CGAffineTransform(rotationAngle: CGFloat(Double.pi / 2))
-
+                
                 // Adjust vertical position according to the label's height
                 label.frame.origin.y += label.frame.size.height / 2
-
+                
                 // Adjust horizontal position as the series line
                 label.frame.origin.x = x
                 if xLabelsTextAlignment == .center {
@@ -617,10 +626,9 @@ open class Chart: UIControl {
                     label.frame.origin.x += padding
                 }
             }
-
-            self.addSubview(label)
+            
+            addSubview(label)
         }
-
     }
 
     fileprivate func drawLabelsAndGridOnYAxis() {
@@ -662,7 +670,7 @@ open class Chart: UIControl {
             }
 
             let label = UILabel(frame: CGRect(x: padding, y: y, width: 0, height: 0))
-            label.font = labelFont
+            label.font = yLabelFont
             label.text = yLabelsFormatter(i, labels[i])
             label.textColor = labelColor
             label.sizeToFit()
