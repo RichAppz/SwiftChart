@@ -46,6 +46,7 @@ public protocol ChartDelegate: class {
 typealias ChartPoint = (x: Float, y: Float)
 
 public enum ChartLabelOrientation {
+    case doubleStagger
     case stagger
     case horizontal
     case vertical
@@ -155,6 +156,12 @@ open class Chart: UIControl {
      Height of the area at the top of the chart, acting a padding to make place for the top y-axis label.
      */
     open var topInset: CGFloat = 20
+    
+    open var highlightDisplayed: Bool = false {
+        didSet {
+            highlightShapeLayer.isHidden = !highlightDisplayed
+        }
+    }
     
     /**
      Width of the chart's lines.
@@ -286,6 +293,11 @@ open class Chart: UIControl {
         return series.data[dataIndex!].y
     }
     
+    open func labelForSeries(_ dataIndex: Int) -> Float? {
+        if dataIndex == nil { return nil }
+        return self.xLabels?[dataIndex]
+    }
+    
     fileprivate func drawIBPlaceholder() {
         let placeholder = UIView(frame: self.frame)
         placeholder.backgroundColor = UIColor(red: 0.93, green: 0.93, blue: 0.93, alpha: 1)
@@ -335,6 +347,7 @@ open class Chart: UIControl {
                 
                 if series.line {
                     drawLine(scaledXValues, yValues: scaledYValues, seriesIndex: index)
+                    drawArea(scaledXValues, yValues: scaledYValues, seriesIndex: index)
                 }
                 if series.area {
                     drawArea(scaledXValues, yValues: scaledYValues, seriesIndex: index)
@@ -464,6 +477,7 @@ open class Chart: UIControl {
         // YValues are "reverted" from top to bottom, so 'above' means <= level
         let isAboveZeroLine = yValues.max()! <= self.scaleValueOnYAxis(series[seriesIndex].colors.zeroLevel)
         let path = UIBezierPath()
+        
         path.lineJoinStyle = .round
         path.move(to: CGPoint(x: CGFloat(xValues.first!), y: CGFloat(yValues.first!)))
         for i in 1..<yValues.count {
@@ -553,6 +567,7 @@ open class Chart: UIControl {
     }
     
     var missLabel = true
+    var missCount = 0
     fileprivate func drawLabelsAndGridOnXAxis() {
         
         let context = UIGraphicsGetCurrentContext()!
@@ -570,6 +585,9 @@ open class Chart: UIControl {
         
         let scaled = scaleValuesOnXAxis(labels)
         let padding: CGFloat = 5
+        missCount = 0
+        missLabel = false
+        
         scaled.enumerated().forEach { (i, value) in
             let x = CGFloat(value)
             let isLastLabel = x == drawingWidth
@@ -582,11 +600,22 @@ open class Chart: UIControl {
                 context.strokePath()
             }
             
-            missLabel = !missLabel
-            if (xLabelsSkipLast && isLastLabel) || (missLabel && xLabelsOrientation == .stagger) {
-                // Do not add label at the most right position
+            if
+                (xLabelsSkipLast && isLastLabel) ||
+                (missLabel && (xLabelsOrientation == .stagger || xLabelsOrientation == .doubleStagger)) {
+                if xLabelsOrientation == .doubleStagger {
+                    if missCount == 2 {
+                        missCount = 0
+                        missLabel = false
+                    } else {
+                        missCount += 1
+                    }
+                } else {
+                    missLabel = false
+                }
                 return
             }
+            missLabel = !missLabel
             
             // Add label
             let label = UILabel(frame: CGRect(x: x, y: drawingHeight, width: 0, height: 0))
@@ -607,7 +636,7 @@ open class Chart: UIControl {
                 // Set label's text alignment
                 label.frame.size.width = ((drawingWidth / CGFloat(labels.count)) - padding * 2) + 5
                 label.textAlignment = xLabelsTextAlignment
-            case .stagger:
+            case .stagger, .doubleStagger:
                 label.frame.origin.y -= (label.frame.height - bottomInset) / 2
                 label.frame.origin.x += 1
                 label.textAlignment = .center
@@ -854,6 +883,5 @@ open class Chart: UIControl {
         let dy2 = level - p2.y
         return (x: (p2.x * dy1 - p1.x * dy2) / (dy1 - dy2), y: level)
     }
+    
 }
-
-
