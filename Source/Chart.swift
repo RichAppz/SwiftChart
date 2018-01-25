@@ -159,7 +159,7 @@ open class Chart: UIControl {
     
     open var highlightDisplayed: Bool = false {
         didSet {
-            highlightShapeLayer.isHidden = !highlightDisplayed
+            highlightShapeLayer?.isHidden = !highlightDisplayed
         }
     }
     
@@ -211,7 +211,7 @@ open class Chart: UIControl {
     
     // MARK: Private variables
     
-    fileprivate var highlightShapeLayer: CAShapeLayer!
+    fileprivate var highlightShapeLayer: CAShapeLayer?
     fileprivate var layerStore: [CAShapeLayer] = []
     
     fileprivate var drawingHeight: CGFloat!
@@ -602,7 +602,7 @@ open class Chart: UIControl {
             
             if
                 (xLabelsSkipLast && isLastLabel) ||
-                (missLabel && (xLabelsOrientation == .stagger || xLabelsOrientation == .doubleStagger)) {
+                    (missLabel && (xLabelsOrientation == .stagger || xLabelsOrientation == .doubleStagger)) {
                 if xLabelsOrientation == .doubleStagger {
                     if missCount == 2 {
                         missCount = 0
@@ -885,3 +885,4 @@ open class Chart: UIControl {
     }
     
 }
+
